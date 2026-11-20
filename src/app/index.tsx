@@ -1,98 +1,52 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Redirect, router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BigButton, RText, Screen } from '@/components/ui';
+import { formatClock } from '@/lib/format';
+import { useSettings } from '@/lib/settings-context';
+import { loadSessions, type Session } from '@/lib/storage';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+export default function Home() {
+  const { settings, loaded } = useSettings();
+  const [lastFeed, setLastFeed] = useState<Session | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadSessions().then((s) => setLastFeed(s.find((x) => x.kind === 'feed') ?? null));
+    }, []),
   );
-}
 
-export default function HomeScreen() {
+  if (!loaded) return <Screen back={false}>{null}</Screen>;
+  if (!settings.onboarded) return <Redirect href="/setup" />;
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <Screen back={false}>
+      <View style={styles.top}>
+        <RText variant="title">Night shift</RText>
+        <RText variant="dim">
+          {lastFeed
+            ? `Last feed ${formatClock(lastFeed.startedAt)}${lastFeed.side ? ` · ${lastFeed.side}` : ''}`
+            : 'Dim, quiet, and red. You’ve got this.'}
+        </RText>
+      </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+      <View style={styles.buttons}>
+        <BigButton label="Feed timer" sublabel="Gentle nudges to stay awake" onPress={() => router.push('/timer')} />
+        <BigButton label="Move" sublabel="Guided gentle movement" onPress={() => router.push('/move')} />
+        <BigButton label="Walk" sublabel="Paced laps to settle baby" onPress={() => router.push('/walk')} />
+      </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      <Pressable onPress={() => router.push('/settings')} hitSlop={16} accessibilityRole="button">
+        <RText variant="small" center>
+          Settings
+        </RText>
+      </Pressable>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
+  top: { gap: 6, marginTop: 12 },
+  buttons: { flex: 1, justifyContent: 'center', gap: 16 },
 });

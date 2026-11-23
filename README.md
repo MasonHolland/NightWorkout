@@ -2,7 +2,7 @@
 
 An iPhone app for parents up at night with a newborn. It only uses red on black, and does three things: a feed timer that buzzes you every few minutes so you don't fall asleep, short guided movement routines, and a walking metronome for settling laps.
 
-**▶ Try it:** install **Expo Go** on your iPhone, start the app on your computer and scan the QR code ([steps below](#run-it-locally)). You don't need a Mac.
+**▶ Try it: [web demo](https://masonholland.github.io/NightWorkout/)**, or the real thing on your iPhone with **Expo Go** ([steps below](#run-it-locally), no Mac needed). The web demo can't vibrate or dim the screen, which is most of the point at 3 am, but it shows how the app works.
 
 <p align="center">
   <img src="docs/media/demo.gif" width="300" alt="Demo: starting the feed timer and getting a stay-awake nudge, running the 'Holding baby' movement routine, setting the walking pace, and dimming the screen in Settings">
@@ -45,7 +45,7 @@ Settings and sessions are stored on the phone. There's no account and no server.
   </tr>
 </table>
 
-<sub>Taken from the web build in a phone-sized browser. On a phone the screen is dimmed as well.</sub>
+<sub>Taken from the web demo in a phone-sized browser. On a phone the screen is dimmed as well.</sub>
 
 ## Tech stack
 
@@ -114,6 +114,12 @@ Scan the QR code in the terminal with the iPhone Camera app and it opens in Expo
 | `npm run web` | Run in a browser, for layout checks only (no haptics, dimming or step counting) |
 | `npm run media` | Re-record the screenshots and demo video in `docs/media/` (see below) |
 
+## Web demo
+
+The web build is a demo of the iPhone app. Every push to `main` runs the palette check, exports it with `npx expo export --platform web` and publishes it to GitHub Pages (`.github/workflows/deploy.yml`). `app.json` sets `experiments.baseUrl` to `/NightWorkout` so it works from that sub-path.
+
+`src/components/WebDemo.web.tsx` only exists for the web build: on a computer it shows the app at iPhone size in a frame with a short description, and in a phone browser it adds a small "web demo" banner you can close. It's red on black too, and iOS never loads it.
+
 ## Release
 
 ```bash
@@ -123,7 +129,7 @@ npx eas-cli@latest submit -p ios     # upload to TestFlight / App Store
 
 ## Screenshots and demo video
 
-`npm run media` records everything in `docs/media/` with Playwright, using the web build in a phone-sized Chromium. It starts `expo start --web` on port 8082 if it isn't already running, and writes PNG screenshots, `demo.mp4`, `demo.gif` (used above) and `demo-poster.jpg`. Use `npm run media -- --only shots` or `--only video` to do half. The first time, run `npx playwright install chromium`.
+`npm run media` records everything in `docs/media/` with Playwright, using the web build in a phone-sized Chromium (without the demo banner). It starts `expo start --web` on port 8082 if it isn't already running, and writes PNG screenshots, `demo.mp4`, `demo.gif` (used above) and `demo-poster.jpg`. Use `npm run media -- --only shots` or `--only video` to do half. The first time, run `npx playwright install chromium`.
 
 The browser clock is set to 2:41 am with a few earlier feeds already logged, and the timers are fast-forwarded where waiting would take minutes. The steps are in `scripts/media/capture.mjs`.
 
@@ -140,10 +146,12 @@ src/
     settings.tsx       Brightness, nudge interval, vibration strength
     setup.tsx          Red screen setup guide (first launch)
   components/ui.tsx    Red-only building blocks: Screen, BigButton, Stepper, Segmented …
+  components/WebDemo*  Web demo banner and desktop frame (WebDemo.tsx is a no-op on iOS)
   data/routines.ts     Routines and the quick stay-awake moves
   hooks/               Night brightness and keep-awake
   lib/                 Haptic patterns, settings, session storage, formatting
   theme/palette.ts     The only place colours are defined
+.github/workflows/     Publishes the web demo to GitHub Pages
 scripts/               Palette check and icon generator; media/ records the README screenshots and video
 docs/media/            Screenshots and demo video used in this README
 ```

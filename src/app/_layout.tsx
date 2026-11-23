@@ -1,6 +1,7 @@
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { WebDemo } from '@/components/WebDemo';
 import { useNightBrightness } from '@/hooks/use-night-mode';
 import { SettingsProvider, useSettings } from '@/lib/settings-context';
 import { palette } from '@/theme/palette';
@@ -30,13 +31,15 @@ export default function RootLayout() {
       <NightBrightness />
       <ThemeProvider value={redTheme}>
         <StatusBar hidden style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: palette.black },
-            animation: 'fade',
-          }}
-        />
+        <WebDemo>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: palette.black },
+              animation: 'fade',
+            }}
+          />
+        </WebDemo>
       </ThemeProvider>
     </SettingsProvider>
   );
